@@ -1,20 +1,21 @@
 package ui;
 
-import java.awt.EventQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import javax.swing.JSplitPane;
-import java.awt.Toolkit;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import java.awt.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class UI {
 
+	private static final Logger logger = LoggerFactory.getLogger(UI.class);
+
 	private JFrame frame;
+
 	private JPanel htmlOutput;
-	private JPanel categorySelector;
+	private JScrollPane categorySelector;
 	private JPanel classifiedTable;
 	private JLabel statusLabel;
 
@@ -22,15 +23,33 @@ public class UI {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+
+		/** Some vanity for fellow command line runners */
+
+		logger.info("Bienvenue sur Classified Crawler");
+		logger.info("");
+		logger.warn("     _/_/_/  _/_/_/      _/_/    _/          _/  _/        _/_/_/_/  _/_/_/    ");
+		logger.warn("  _/        _/    _/  _/    _/  _/          _/  _/        _/        _/    _/   ");
+		logger.warn(" _/        _/_/_/    _/_/_/_/  _/    _/    _/  _/        _/_/_/    _/_/_/      ");
+		logger.warn("_/        _/    _/  _/    _/    _/  _/  _/    _/        _/        _/    _/     ");
+		logger.warn(" _/_/_/  _/    _/  _/    _/      _/  _/      _/_/_/_/  _/_/_/_/  _/    _/      ");
+		logger.info("");
+		logger.info("par Alde");
+		logger.info("");
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e1) {
+			e1.printStackTrace();
+		}
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					
-					
-					
-					
+
 					// Start UI
-					
+
 					UI window = new UI();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
@@ -51,36 +70,77 @@ public class UI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+
+		//
+
 		frame = new JFrame();
-		frame.setIconImage(Toolkit.getDefaultToolkit().getImage(UI.class.getResource("/com/sun/javafx/scene/web/skin/DecreaseIndent_16x16_JFX.png")));
+		frame.setIconImage(Toolkit.getDefaultToolkit()
+				.getImage(UI.class.getResource("/com/sun/javafx/scene/web/skin/DecreaseIndent_16x16_JFX.png")));
 		frame.setTitle("Outils de recherche - TVC9 Classified");
-		frame.setBounds(100, 100, 606, 426);
+		frame.setBounds(100, 100, 743, 421);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+
 		JPanel statusPanel = new JPanel();
 		frame.getContentPane().add(statusPanel, BorderLayout.SOUTH);
-		
+
 		statusLabel = new JLabel("Loading...");
 		statusPanel.add(statusLabel);
-		
+
 		JSplitPane horizonPane = new JSplitPane();
 		horizonPane.setResizeWeight(0.5);
 		horizonPane.setDividerLocation(200);
 		horizonPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		frame.getContentPane().add(horizonPane, BorderLayout.CENTER);
-		
+
 		JSplitPane verticalPane = new JSplitPane();
 		verticalPane.setResizeWeight(0.5);
 		horizonPane.setLeftComponent(verticalPane);
-		
-		categorySelector = new JPanel();
+
+		categorySelector = SubCategorySelector.getCategorySelector();
 		verticalPane.setLeftComponent(categorySelector);
-		
+
 		classifiedTable = new JPanel();
 		verticalPane.setRightComponent(classifiedTable);
-		
+
 		htmlOutput = new JPanel();
 		horizonPane.setRightComponent(htmlOutput);
+
+		//
+
+
+		startTimer();
+	}
+
+	private void startTimer() {
+
+		final Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+
+			//int i = Properties.SECONDS_BETWEEN_RELOADS.getValueAsInt();
+
+			int i = 10;
+
+			public void run() {
+
+				i--;
+
+				statusLabel.setText("Reloading in " + i + " second(s)...");
+
+				if ((i % 10 == 0) && i != 0)  { //When i is a multiple of 10
+					logger.info("Reloading in " + i + " second(s)...");
+				}
+
+				if (i < 0) {
+					logger.info("Timer as ended, reloading...");
+
+					SubCategorySelector.getListingCrawler().updateListings();
+
+					timer.cancel();
+					startTimer();
+				}
+			}
+		}, 0, 1000);
+
 	}
 
 }

@@ -47,4 +47,7 @@ public class SubCategory {
         return subCategory + " (" + numberOfOffers + ")";
     }
 
+    public String getUrl() {
+        return url;
+    }
 }

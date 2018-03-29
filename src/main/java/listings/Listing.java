@@ -1,4 +1,4 @@
-package massCrawl;
+package listings;
 
 import java.util.Objects;
 
@@ -12,7 +12,6 @@ public class Listing {
 	public String prix;
 	public String image;
 
-
 	@Override
 	public String toString() {
 		return "Listing{" +
@@ -25,7 +24,6 @@ public class Listing {
 				", image='" + image + '\'' +
 				'}';
 	}
-
 
 	@Override
 	public boolean equals(Object o) {

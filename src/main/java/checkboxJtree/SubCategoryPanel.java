@@ -28,11 +28,12 @@
  * #L%
  */
 
-package jtree;
-
-import massCrawl.SubCategory;
+package checkboxJtree;
 
 import javax.swing.*;
+
+import listings.SubCategory;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

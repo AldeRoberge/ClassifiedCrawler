@@ -28,7 +28,7 @@
  * #L%
  */
 
-package jtree;
+package checkboxJtree;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -57,8 +57,7 @@ public class SubCategoryNodeEditor extends AbstractCellEditor implements
     @Override
     public Object getCellEditorValue() {
         final SubCategoryPanel panel = renderer.getPanel();
-        final SubCategoryNodeData checkBoxNode = new SubCategoryNodeData(panel.subCategory);
-        return checkBoxNode;
+        return new SubCategoryNodeData(panel.subCategory);
     }
 
     @Override

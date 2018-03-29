@@ -1,5 +1,20 @@
-package ui;
+package listings;
 
+import jtable.ListingTable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import checkboxJtree.SubCategoryNodeData;
+import checkboxJtree.SubCategoryNodeEditor;
+import checkboxJtree.SubCategoryNodeRenderer;
+
+import javax.swing.*;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,27 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jtree.SubCategoryNodeData;
-import jtree.SubCategoryNodeEditor;
-import jtree.SubCategoryNodeRenderer;
-import massCrawl.ListingCrawler;
-import massCrawl.SubCategory;
-import javax.swing.JPanel;
-import java.awt.FlowLayout;
-import javax.swing.JButton;
-import javax.swing.SwingConstants;
 
 /**
  * @author Curtis Rueden (Original Java2s.com tutorial)
@@ -41,17 +35,14 @@ public class SubCategorySelector extends JScrollPane {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubCategorySelector.class);
 
-	//
-
 	private static SubCategorySelector subCategorySelector = new SubCategorySelector();
-	private static ListingCrawler listingCrawler = new ListingCrawler();
+	private static ListingTable listingTable = new ListingTable();
+	private static ListingCrawler listingCrawler = new ListingCrawler(listingTable);
 
-	CategoryCrawler categoryCrawler = new CategoryCrawler();
-
-	Map<String, List<SubCategory>> categories = new HashMap<>();
+	private Map<String, List<SubCategory>> categories;
 
 	/**
-	 * @return Singleton SubCategorySelector (this)
+	 * @return Singleton SubCategorySelector (this, JTree)
 	 */
 	public static SubCategorySelector getCategorySelector() {
 		return subCategorySelector;
@@ -64,9 +55,17 @@ public class SubCategorySelector extends JScrollPane {
 		return listingCrawler;
 	}
 
+	/**
+	 * @return Singleton ListingTable (JTable)
+	 */
+	public static ListingTable getListingTable() {
+		return listingTable;
+	}
+
 	private SubCategorySelector() {
 		super();
 
+		CategoryCrawler categoryCrawler = new CategoryCrawler();
 		categories = categoryCrawler.getAllCategories();
 
 		logger.info("Chargement des catégories et sous catégories en tant qu'arbre...");
@@ -81,7 +80,6 @@ public class SubCategorySelector extends JScrollPane {
 			final DefaultMutableTreeNode category = new DefaultMutableTreeNode(categoryName);
 
 			for (SubCategory subCategory : subCat) {
-
 				DefaultMutableTreeNode e = new DefaultMutableTreeNode(new SubCategoryNodeData(subCategory));
 				category.add(e);
 			}
@@ -113,10 +111,10 @@ public class SubCategorySelector extends JScrollPane {
 			public void treeNodesChanged(final TreeModelEvent e) {
 				System.out.println(System.currentTimeMillis() + ": nodes changed");
 
-				
+
 				//Reflect changes in listings
 
-				List<SubCategory> selectedCategories = new ArrayList<SubCategory>();
+				List<SubCategory> selectedCategories = new ArrayList<>();
 
 				for (Map.Entry<String, List<SubCategory>> pair : categories.entrySet()) {
 
@@ -127,7 +125,9 @@ public class SubCategorySelector extends JScrollPane {
 					}
 				}
 
-				listingCrawler.updateSubCategory(selectedCategories); //Update listing crawler
+
+
+				listingCrawler.addOrRemoveSubCategoriesFromCrawler(selectedCategories); //Update listing crawler
 			}
 
 			@Override
@@ -155,8 +155,8 @@ class CategoryCrawler {
 
 	private static final Logger logger = LoggerFactory.getLogger(CategoryCrawler.class);
 
-	public static final String TVC9_ROOT = "http://tvc9.cablevision.qc.ca/";
-	public static final String PETITES_ANNONCES_ORIGIN = TVC9_ROOT + "?q=pa";
+	private static final String TVC9_ROOT = "http://tvc9.cablevision.qc.ca/";
+	private static final String PETITES_ANNONCES_ORIGIN = TVC9_ROOT + "?q=pa";
 
 	public static void main(String[] args) {
 
@@ -183,8 +183,6 @@ class CategoryCrawler {
 
 		ArrayList<SubCategory> bufferSubCategories = new ArrayList<>();
 
-		/**  */
-
 		URL url;
 		try {
 			url = new URL(PETITES_ANNONCES_ORIGIN);
@@ -204,12 +202,6 @@ class CategoryCrawler {
 				}
 
 				if (isInsideCategories) {
-
-					/**try { //For more console readability (okay... for A E S T H E T I C reasons...)
-						Thread.sleep(100);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}*/
 
 					if (inputLine.contains("<li><span>")) { //Beginning of new category
 

@@ -3,20 +3,19 @@ package ui;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import listings.SubCategorySelector;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class UI {
+class UI {
 
 	private static final Logger logger = LoggerFactory.getLogger(UI.class);
 
 	private JFrame frame;
 
-	private JPanel htmlOutput;
-	private JScrollPane categorySelector;
-	private JPanel classifiedTable;
 	private JLabel statusLabel;
 
 	/**
@@ -24,7 +23,7 @@ public class UI {
 	 */
 	public static void main(String[] args) {
 
-		/** Some vanity for fellow command line runners */
+		/* Some vanity */
 
 		logger.info("Bienvenue sur Classified Crawler");
 		logger.info("");
@@ -62,7 +61,7 @@ public class UI {
 	/**
 	 * Create the application.
 	 */
-	public UI() {
+	private UI() {
 		initialize();
 	}
 
@@ -78,7 +77,7 @@ public class UI {
 				.getImage(UI.class.getResource("/com/sun/javafx/scene/web/skin/DecreaseIndent_16x16_JFX.png")));
 		frame.setTitle("Outils de recherche - TVC9 Classified");
 		frame.setBounds(100, 100, 743, 421);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 		JPanel statusPanel = new JPanel();
 		frame.getContentPane().add(statusPanel, BorderLayout.SOUTH);
@@ -96,13 +95,13 @@ public class UI {
 		verticalPane.setResizeWeight(0.5);
 		horizonPane.setLeftComponent(verticalPane);
 
-		categorySelector = SubCategorySelector.getCategorySelector();
+		JScrollPane categorySelector = SubCategorySelector.getCategorySelector();
 		verticalPane.setLeftComponent(categorySelector);
 
-		classifiedTable = new JPanel();
+		JPanel classifiedTable = SubCategorySelector.getListingTable();
 		verticalPane.setRightComponent(classifiedTable);
 
-		htmlOutput = new JPanel();
+		JPanel htmlOutput = new JPanel();
 		horizonPane.setRightComponent(htmlOutput);
 
 		//
@@ -131,7 +130,7 @@ public class UI {
 				}
 
 				if (i < 0) {
-					logger.info("Timer as ended, reloading...");
+					logger.info("Temp écoulé, rechargement...");
 
 					SubCategorySelector.getListingCrawler().updateListings();
 

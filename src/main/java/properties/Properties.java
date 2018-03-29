@@ -27,7 +27,7 @@ public class Properties {
 
 class PropertyFileManager {
 
-	PropertiesConfiguration config;
+	private PropertiesConfiguration config;
 
 	private static final Logger logger = LoggerFactory.getLogger(PropertyFileManager.class);
 

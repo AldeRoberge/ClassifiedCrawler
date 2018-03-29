@@ -28,11 +28,11 @@
  * #L%
  */
 
-package jtree;
-
-import massCrawl.SubCategory;
+package checkboxJtree;
 
 import javax.swing.*;
+
+import listings.SubCategory;
 
 /**
  * A tree node user object, for use with a {@link JTree}, that tracks whether it

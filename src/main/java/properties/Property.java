@@ -26,7 +26,7 @@ public class Property {
         this.e = e;
     }
 
-    public String getValue() {
+    private String getValue() {
         return value;
     }
 
@@ -53,13 +53,14 @@ public class Property {
     }
 
     public boolean getValueAsBoolean() {
-        if (Properties.TRUE.equals(value)) {
-            return true;
-        } else if (Properties.FALSE.equals(value)) {
-            return false;
-        } else {
-            logger.error("isTrue() on " + key + " for value " + value + " is impossible. (Boolean string values are case sensitive!)");
-            return false;
+        switch (value) {
+            case Properties.TRUE:
+                return true;
+            case Properties.FALSE:
+                return false;
+            default:
+                logger.error("isTrue() on " + key + " for value " + value + " is impossible. (Boolean string values are case sensitive!)");
+                return false;
         }
     }
 

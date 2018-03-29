@@ -28,9 +28,7 @@
  * #L%
  */
 
-package jtree;
-
-import massCrawl.SubCategory;
+package checkboxJtree;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -87,13 +85,8 @@ public class SubCategoryNodeRenderer implements TreeCellRenderer {
             }
         }
 
-        final String stringValue =
-                tree.convertValueToText(value, selected, expanded, leaf, row, false);
-
-        /**panel.label.setText(stringValue);
-        panel.check.setSelected(false);*/ //See bellow
-
-
+        /*final String stringValue =
+                tree.convertValueToText(value, selected, expanded, leaf, row, false);*/
 
         panel.setEnabled(tree.isEnabled());
 

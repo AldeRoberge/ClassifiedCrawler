@@ -1,5 +1,6 @@
-package massCrawl;
+package listings;
 
+import jtable.ListingTable;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,80 +8,95 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ListingCrawler {
 
 	private static final Logger logger = LoggerFactory.getLogger(ListingCrawler.class);
+	private final ListingTable listingTable;
 
-	HashMap<SubCategory, ArrayList<Listing>> listings = new HashMap<>();
+	private ArrayList<SubCategory> listings = new ArrayList<>();
+
+
+	public ListingCrawler(ListingTable listingTable) {
+		this.listingTable = listingTable;
+	}
+
+
+	/**
+	 * @return All listings from every sub categories
+	 */
+	public List<SubCategory> getAllListings() {
+		return listings;
+	}
 
 	/**
 	 * Update selected sub categories
 	 */
-	public void updateSubCategory(List<SubCategory> newSelectedSubCategories) {
-		//Remove
+	public void addOrRemoveSubCategoriesFromCrawler(List<SubCategory> newSelectedSubCategories) {
 
-		Iterator<Entry<SubCategory, ArrayList<Listing>>> it = listings.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<SubCategory, ArrayList<Listing>> pair = (Map.Entry<SubCategory, ArrayList<Listing>>) it.next();
-
-			SubCategory subCat = pair.getKey();
-
-			if (!newSelectedSubCategories.contains(subCat)) {
-				logger.info("Removed category '" + subCat.getName() + "' from ListingCrawler.");
-				it.remove(); //remove category from listings
+		for (SubCategory oldSubCategory : listings) { // Removed
+			if (!newSelectedSubCategories.contains(oldSubCategory)) {
+				logger.info("Sous catégorie '" + oldSubCategory.getName() + "' enlevée.");
+				listings.remove(oldSubCategory);
 			}
 		}
 
-		for (SubCategory newSubCategory : newSelectedSubCategories) {
-			if (!listings.containsKey(newSubCategory)) {
-				listings.put(newSubCategory, new ArrayList<Listing>());
-				logger.info("Added category '" + newSubCategory.getName() + "' in ListingCrawler.");
+		for (SubCategory newSubCategory : newSelectedSubCategories) {  // Added
+			if (!listings.contains(newSubCategory)) {
+				logger.info("Sous catégorie '" + newSubCategory.getName() + "' ajoutée.");
+				listings.add(newSubCategory);
 			}
 		}
 
 	}
 
-
-	boolean isCurrentlyReloading = false;
+	private boolean isCurrentlyReloading = false;
 
 	public void updateListings() {
 
 		if (!isCurrentlyReloading) {
+			isCurrentlyReloading = true;
 
+			logger.info("Recherche dans les " + listings.size() + " sous-catégories sélectionnées...");
 
-			logger.info("Crawling all " + listings.size() + " selected sub categories...");
+			for (SubCategory subCategory : listings) {
 
-			for (Entry<SubCategory, ArrayList<Listing>> pair : listings.entrySet()) {
-				SubCategory subCat = pair.getKey();
-				ArrayList<Listing> existingListings = pair.getValue();
-
-				logger.info("Getting all listings for sub category '" + subCat.toString() + "'...");
-
-				List<Listing> allListings = getAllListingsForSubCategory(subCat);
+				List<Listing> allListings = getAllListingsForSubCategory(subCategory);
 
 				for (Listing listing : allListings) {
-					if (!existingListings.contains(listing)) {
-						logger.info("Added new listing '" + listing.titre + "' in sub category '" + subCat.getName() + "'...");
-						listings.get(subCat).add(listing);
+					if (!subCategory.listings.contains(listing)) {
+						logger.info("Added new listing '" + listing.titre + "' in sub category '" + subCategory.getName() + "'...");
+						subCategory.listings.add(listing);
 					}
 				}
-
 			}
 
 			isCurrentlyReloading = false;
 
 		} else {
-			logger.error("Currently crawling, waiting for next reload.");
+			logger.error("Recherche déja en cours, attente du prochain reload.");
 		}
 
+
+		updateTable();
+
+	}
+
+	private void updateTable() {
+
+		List<Listing> allListings = new ArrayList<>();
+		for (SubCategory s : listings) {
+			allListings.addAll(s.listings);
+		}
+
+		listingTable.setTableData(allListings);
 
 	}
 
 
-	public List<Listing> getAllListingsForSubCategory(SubCategory s) {
+	private List<Listing> getAllListingsForSubCategory(SubCategory s) {
 		String url = s.getUrl();
 
 		//Make sure we get all the listings in a single page (TODO : Veirify it doesn't get blocked at a certain #)
@@ -88,7 +104,7 @@ public class ListingCrawler {
 			url += "10";
 		}
 
-		List<Listing> listings = new ArrayList<Listing>();
+		List<Listing> listings = new ArrayList<>();
 
 
 		//
@@ -126,7 +142,7 @@ public class ListingCrawler {
 					}
 
 
-					/**
+					/*
 					 <div class='titre_liste_annonce'>Chambre et pension pour travailleurs - Amos</div>
 					 <div class='date_liste_annonce'>Date de parution : 27 mars 2018</div>
 					 <div class='ville_liste_annonce'>Lieu de vente : Amos</div>
@@ -179,7 +195,7 @@ public class ListingCrawler {
 			return "null";
 		}
 
-		return inputLine.substring(inputLine.indexOf(start)+start.length(), removeTrailingChars);
+		return inputLine.substring(inputLine.indexOf(start));
 	}
 
 	private String inbetween(String inputLine, String start, String end) {

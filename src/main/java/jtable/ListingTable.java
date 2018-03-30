@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import listings.Listing;
+import ui.UI;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -22,7 +23,7 @@ public class ListingTable extends JPanel implements ActionListener {
 	/**
 	 * currently selected Listing.
 	 */
-	private ArrayList<Listing> selectedListings = new ArrayList<>();
+	private Listing selectedListing;
 
 	/**
 	 * Directory listing
@@ -43,15 +44,15 @@ public class ListingTable extends JPanel implements ActionListener {
 
 		table = new JTable();
 		table.setRowSelectionAllowed(true);
-		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setAutoCreateRowSorter(true);
 		table.setShowVerticalLines(false);
 		table.setSelectionBackground(Color.PINK);
 		table.setSelectionForeground(Color.WHITE);
 
 		/*
-	  Popup menu
-	 */
+		Popup menu
+		*/
 		JPopupMenu popupMenu = new JPopupMenu();
 		table.setComponentPopupMenu(popupMenu);
 
@@ -74,27 +75,17 @@ public class ListingTable extends JPanel implements ActionListener {
 					int minIndex = lsm.getMinSelectionIndex();
 					int maxIndex = lsm.getMaxSelectionIndex();
 
-					selectedListings.clear();
-
 					for (int i = minIndex; i <= maxIndex; i++) {
 						if (lsm.isSelectedIndex(i)) {
 
 							//Fixes row being incorrect after sortings
 							int row = table.convertRowIndexToModel(i);
 
-							selectedListings.add(listingTableModel.getListing(row));
-						}
-					}
+							selectedListing = listingTableModel.getListing(row);
 
-					if (!isAdjusting) {
-						if (selectedListings.size() == 1) { //amount of selected listings == 1
-
-							Listing selectedListing = selectedListings.get(0);
-
-						} else if (selectedListings.size() > 1) { //more than 1 selected listing
+							UI.updateHtmlOutput(selectedListing);
 
 						}
-
 					}
 
 				}
@@ -109,9 +100,7 @@ public class ListingTable extends JPanel implements ActionListener {
 		tableScroll.setPreferredSize(new Dimension((int) d.getWidth(), (int) d.getHeight() / 2));
 		add(tableScroll, BorderLayout.CENTER);
 
-
 	}
-
 
 	/**
 	 * Update the table on the EDT
@@ -155,7 +144,7 @@ public class ListingTable extends JPanel implements ActionListener {
 	private void removeListings(ArrayList<Listing> listingsToRemove) {
 		final List<Listing> listings = listingTableModel.getListings();
 
-		for (Iterator<Listing> iterator = listings.iterator(); iterator.hasNext(); ) {
+		for (Iterator<Listing> iterator = listings.iterator(); iterator.hasNext();) {
 			Listing listing = iterator.next();
 
 			if (listingsToRemove.contains(listing)) {
@@ -181,44 +170,38 @@ public class ListingTable extends JPanel implements ActionListener {
 		tableColumn.setMinWidth(width);
 	}
 
-	public void removeSelectedListings() {
-		removeListings(selectedListings);
-	}
-
 	//UPDATE POPUPMENU END
 
 }
 
 class ListingTableModel extends AbstractTableModel {
 
-
 	private List<Listing> listings;
-	private String[] columns = {"Titre", "Description", "Numéro", "Ville", "Date", "Prix", "Image"};
+	private String[] columns = { "Titre", "Description", "Numéro", "Ville", "Date", "Prix", "Image" };
 
 	ListingTableModel() {
 		listings = new ArrayList<>();
 	}
 
-
 	public Object getValueAt(int row, int column) {
 		Listing listing = listings.get(row);
 		switch (column) {
-			case 0:
-				return listing.titre;
-			case 1:
-				return listing.description;
-			case 2:
-				return listing.numero;
-			case 3:
-				return listing.ville;
-			case 4:
-				return listing.date;
-			case 5:
-				return listing.prix;
-			case 6:
-				return listing.image;
-			default:
-				System.err.println("Logic Error");
+		case 0:
+			return listing.titre;
+		case 1:
+			return listing.description;
+		case 2:
+			return listing.numero;
+		case 3:
+			return listing.ville;
+		case 4:
+			return listing.date;
+		case 5:
+			return listing.prix;
+		case 6:
+			return listing.imageUrl;
+		default:
+			System.err.println("Logic Error");
 		}
 		return "";
 	}
@@ -272,7 +255,8 @@ class CellRenderer extends DefaultTableCellRenderer {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+			int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
 		// if (value>17 value<26) {

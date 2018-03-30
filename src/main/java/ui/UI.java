@@ -1,22 +1,42 @@
 package ui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import listings.SubCategorySelector;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-class UI {
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import listings.Listing;
+import listings.ListingPanel;
+import listings.SubCategorySelector;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class UI {
 
 	private static final Logger logger = LoggerFactory.getLogger(UI.class);
 
 	private JFrame frame;
 
 	private JLabel statusLabel;
+	private static JPanel htmlOutput;
 
 	/**
 	 * Launch the application.
@@ -46,10 +66,8 @@ class UI {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-
-					// Start UI
-
 					UI window = new UI();
+					window.frame.setLocationRelativeTo(null); //Centers the frame in the middle
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -84,6 +102,14 @@ class UI {
 
 		statusLabel = new JLabel("Loading...");
 		statusPanel.add(statusLabel);
+		
+		JButton btnReload = new JButton("Rechargement automatique");
+		btnReload.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SubCategorySelector.getListingCrawler().updateListings();
+			}
+		});
+		statusPanel.add(btnReload);
 
 		JSplitPane horizonPane = new JSplitPane();
 		horizonPane.setResizeWeight(0.5);
@@ -101,45 +127,19 @@ class UI {
 		JPanel classifiedTable = SubCategorySelector.getListingTable();
 		verticalPane.setRightComponent(classifiedTable);
 
-		JPanel htmlOutput = new JPanel();
-		horizonPane.setRightComponent(htmlOutput);
+		JScrollPane scrollPane = new JScrollPane();
+		htmlOutput = new JPanel();
+		scrollPane.setViewportView(htmlOutput);
+
+		horizonPane.setRightComponent(scrollPane);
 
 		//
 
-
-		startTimer();
 	}
 
-	private void startTimer() {
-
-		final Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new TimerTask() {
-
-			//int i = Properties.SECONDS_BETWEEN_RELOADS.getValueAsInt();
-
-			int i = 10;
-
-			public void run() {
-
-				i--;
-
-				statusLabel.setText("Reloading in " + i + " second(s)...");
-
-				if ((i % 10 == 0) && i != 0)  { //When i is a multiple of 10
-					logger.info("Reloading in " + i + " second(s)...");
-				}
-
-				if (i < 0) {
-					logger.info("Temp écoulé, rechargement...");
-
-					SubCategorySelector.getListingCrawler().updateListings();
-
-					timer.cancel();
-					startTimer();
-				}
-			}
-		}, 0, 1000);
-
+	public static void updateHtmlOutput(Listing listing) {
+		htmlOutput.removeAll();
+		htmlOutput.add(new ListingPanel(listing));
 	}
 
 }

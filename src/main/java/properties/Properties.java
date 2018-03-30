@@ -37,6 +37,9 @@ class PropertyFileManager {
 			config = new PropertiesConfiguration(fileName);
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
+
+
+
 		}
 
 		logger.info("Restoring properties from " + fileName + "...");

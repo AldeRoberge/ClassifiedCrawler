@@ -10,7 +10,15 @@ public class Listing {
 	public String ville;
 	public String date;
 	public String prix;
-	public String image;
+	public String imageUrl;
+	
+	//Details on page TODO
+	
+	public String url;
+	
+	public String name;
+	public String nombreVisites;
+	public String etat;
 
 	@Override
 	public String toString() {
@@ -21,7 +29,7 @@ public class Listing {
 				", ville='" + ville + '\'' +
 				", date='" + date + '\'' +
 				", prix='" + prix + '\'' +
-				", image='" + image + '\'' +
+				", imageUrl='" + imageUrl + '\'' +
 				'}';
 	}
 

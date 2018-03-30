@@ -1,6 +1,7 @@
 package listings;
 
 import jtable.ListingTable;
+import util.StringsUtility;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,6 +228,9 @@ class CategoryCrawler {
 						String scName = inputLine.substring(inputLine.indexOf("10\">") + 4, inputLine.indexOf("("));
 						scName = scName.replaceAll("&nbsp;", " "); //Replace the symbol with spaces
 						scName = scName.trim(); //Remove trialing whitespace
+						
+						scName = StringsUtility.deencode(scName);
+						
 						logger.debug("Nom : " + scName);
 
 						//Url

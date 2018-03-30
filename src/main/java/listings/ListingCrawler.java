@@ -1,9 +1,9 @@
 package listings;
 
 import jtable.ListingTable;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.StringsUtility;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,11 +18,9 @@ public class ListingCrawler {
 
 	private ArrayList<SubCategory> listings = new ArrayList<>();
 
-
 	public ListingCrawler(ListingTable listingTable) {
 		this.listingTable = listingTable;
 	}
-
 
 	/**
 	 * @return All listings from every sub categories
@@ -43,7 +41,7 @@ public class ListingCrawler {
 			}
 		}
 
-		for (SubCategory newSubCategory : newSelectedSubCategories) {  // Added
+		for (SubCategory newSubCategory : newSelectedSubCategories) { // Added
 			if (!listings.contains(newSubCategory)) {
 				logger.info("Sous catégorie '" + newSubCategory.getName() + "' ajoutée.");
 				listings.add(newSubCategory);
@@ -56,31 +54,38 @@ public class ListingCrawler {
 
 	public void updateListings() {
 
-		if (!isCurrentlyReloading) {
-			isCurrentlyReloading = true;
+		try {
 
-			logger.info("Recherche dans les " + listings.size() + " sous-catégories sélectionnées...");
+			if (!isCurrentlyReloading) {
+				isCurrentlyReloading = true;
 
-			for (SubCategory subCategory : listings) {
+				logger.info("Recherche dans les " + listings.size() + " sous-catégories sélectionnées...");
 
-				List<Listing> allListings = getAllListingsForSubCategory(subCategory);
+				for (SubCategory subCategory : listings) {
 
-				for (Listing listing : allListings) {
-					if (!subCategory.listings.contains(listing)) {
-						logger.info("Added new listing '" + listing.titre + "' in sub category '" + subCategory.getName() + "'...");
-						subCategory.listings.add(listing);
+					List<Listing> allListings = getAllListingsForSubCategory(subCategory);
+
+					for (Listing listing : allListings) {
+						if (!subCategory.listings.contains(listing)) {
+							logger.info("Added new listing '" + listing.titre + "' in sub category '"
+									+ subCategory.getName() + "'...");
+							subCategory.listings.add(listing);
+						}
 					}
 				}
+
+				isCurrentlyReloading = false;
+
+			} else {
+				logger.error("Recherche déja en cours, attente du prochain reload.");
 			}
 
-			isCurrentlyReloading = false;
+			updateTable();
 
-		} else {
-			logger.error("Recherche déja en cours, attente du prochain reload.");
+		} catch (Exception e) { //Very often a concurent exception due to changes while reloading
+			e.printStackTrace();
+			logger.error("Error with reloading listings!");
 		}
-
-
-		updateTable();
 
 	}
 
@@ -95,7 +100,6 @@ public class ListingCrawler {
 
 	}
 
-
 	private List<Listing> getAllListingsForSubCategory(SubCategory s) {
 		String url = s.getUrl();
 
@@ -106,9 +110,7 @@ public class ListingCrawler {
 
 		List<Listing> listings = new ArrayList<>();
 
-
 		//
-
 
 		boolean isInsideListings = false;
 
@@ -116,11 +118,9 @@ public class ListingCrawler {
 
 			Listing listing = new Listing();
 
-
 			URL oracle = null;
 			oracle = new URL(url);
-			BufferedReader in = new BufferedReader(
-					new InputStreamReader(oracle.openStream()));
+			BufferedReader in = new BufferedReader(new InputStreamReader(oracle.openStream()));
 
 			String inputLine;
 			while ((inputLine = in.readLine()) != null) {
@@ -141,7 +141,6 @@ public class ListingCrawler {
 						listing = new Listing();
 					}
 
-
 					/*
 					 <div class='titre_liste_annonce'>Chambre et pension pour travailleurs - Amos</div>
 					 <div class='date_liste_annonce'>Date de parution : 27 mars 2018</div>
@@ -152,29 +151,42 @@ public class ListingCrawler {
 					 <div class='image_annonce'><div class='image_liste_annonce'><img src='http://tvc9.cablevision.qc.ca/sites/default/files/styles/pac_liste/public/pacs/immobilier/payant/213311_img_346693.jpg?itok=mDQ-QfmQ' style="max-width:120px; max-height:90px;"></div>
 					 */
 
-
 					if (inputLine.contains("titre_liste_annonce")) {
-						listing.titre = inbetween(inputLine, "<div class='titre_liste_annonce'>", "</div>");
+						listing.titre = StringsUtility.inbetween(inputLine, "<div class='titre_liste_annonce'>",
+								"</div>");
 					} else if (inputLine.contains("date_liste_annonce")) {
-						listing.date = inbetween(inputLine, "Date de parution : ", "</div>");
+						listing.date = StringsUtility.inbetween(inputLine, "Date de parution : ", "</div>");
 					} else if (inputLine.contains("ville_liste_annonce")) {
-						listing.ville = inbetween(inputLine, "Lieu de vente : ", "</div>");
+						listing.ville = StringsUtility.inbetween(inputLine, "Lieu de vente : ", "</div>");
 					} else if (inputLine.contains("numero_liste_annonce")) {
-						listing.numero = inbetween(inputLine, "Numéro d'annonce : ", "</div>");
+						listing.numero = StringsUtility.inbetween(inputLine, "Numéro d'annonce : ", "</div>");
 					} else if (inputLine.contains("description_liste_annonce")) {
 						if (!inputLine.contains("\"</div>")) { // Sometimes it doesn't end on a closing div!
-							listing.description = inbetween(inputLine, "liste_annonce'>", 1);
+							listing.description = StringsUtility.inbetween(inputLine, "liste_annonce'>", 1);
 						} else {
-							listing.description = inbetween(inputLine, "description_liste_annonce'>", "</div>");
+							listing.description = StringsUtility.inbetween(inputLine, "description_liste_annonce'>",
+									"</div>");
 						}
 					} else if (inputLine.contains("prix_liste_annonce")) {
-						listing.prix = inbetween(inputLine, "Prix : ", "</div>");
+						listing.prix = StringsUtility.inbetween(inputLine, "Prix : ", "</div>");
 					} else if (inputLine.contains("image_annonce")) {
-						listing.image = inbetween(inputLine, "annonce'>", "</div>");
+
+
+						String imageUrl = StringsUtility.inbetween(inputLine, "annonce'>", "</div>");
+
+
+						if (imageUrl.contains("<img src='") && imageUrl.contains("' style")) {
+							imageUrl = StringsUtility.inbetween(imageUrl, "<img src='", "' style");
+						} else {
+							logger.info(imageUrl);
+						}
+
+						listing.imageUrl = imageUrl;
+
+
 					}
 
 				}
-
 
 			}
 			in.close();
@@ -186,33 +198,6 @@ public class ListingCrawler {
 
 		return listings;
 
-
 	}
-
-	private String inbetween(String inputLine, String start, int removeTrailingChars) {
-		if (!inputLine.contains(start)) {
-			logger.error("Error : line '" + inputLine + "' doesn't contain string : " + start);
-			return "null";
-		}
-
-		return inputLine.substring(inputLine.indexOf(start));
-	}
-
-	private String inbetween(String inputLine, String start, String end) {
-
-		//Escape special encoding (I.E. ; è being shown as &egrave;)
-		inputLine = StringEscapeUtils.unescapeHtml4(inputLine);
-
-		if (!inputLine.contains(start)) {
-			logger.error("Error : line '" + inputLine + "' doesn't contain string : " + start);
-			return "null";
-		} else if (!inputLine.contains(end)) {
-			logger.error("Error : line '" + inputLine + "' doesn't contain string : " + end);
-			return "null";
-		} else {
-			return inputLine.substring(inputLine.indexOf(start) + start.length(), inputLine.indexOf(end));
-		}
-	}
-
 
 }
